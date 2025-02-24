@@ -31,12 +31,13 @@ public class ProductsCommandController {
                 .productId(UUID.randomUUID().toString())
                 .build();
 
-        String returnValue;
-        try {
-            returnValue = commandGateway.sendAndWait(createProductCommand);
-        } catch (Exception e) {
-            returnValue = e.getLocalizedMessage();
-        }
+        String returnValue ;
+        returnValue = commandGateway.sendAndWait(createProductCommand);
+//        try {
+//            returnValue = commandGateway.sendAndWait(createProductCommand);
+//        } catch (Exception e) {
+//            returnValue = e.getLocalizedMessage();
+//        }
         return returnValue;
        // return "POST handling " + model.getTitle();
     }
@@ -45,12 +46,12 @@ public class ProductsCommandController {
 //        return "GET handling " +env.getProperty("local.server.port");
 //    }
 //    @PutMapping
-    public String putProduct(){
-        return "PUT handling";
-    }
-    @DeleteMapping
-    public String deleteProduct(){
-        return "DELETE handling";
-    }
+//    public String putProduct(){
+//        return "PUT handling";
+//    }
+//    @DeleteMapping
+//    public String deleteProduct(){
+//        return "DELETE handling";
+//    }
 
 }
