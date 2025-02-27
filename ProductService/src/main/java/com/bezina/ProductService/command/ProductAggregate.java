@@ -22,7 +22,7 @@ public class ProductAggregate {
     public ProductAggregate() {
     }
     @CommandHandler
-    public ProductAggregate(CreateProductCommand createProductCommand) {
+    public ProductAggregate(CreateProductCommand createProductCommand)  {
         //validate Create Product Command
         if ( createProductCommand.getPrice().compareTo(BigDecimal.ZERO)<=0 ){
             throw new IllegalArgumentException("Price can't be less or equal to zero");
@@ -33,6 +33,7 @@ public class ProductAggregate {
         }
         ProductCreatedEvent productCreatedEvent = ProductCreatedEvent.from(createProductCommand);
         AggregateLifecycle.apply(productCreatedEvent);
+
     }
     @EventSourcingHandler
     public void on(ProductCreatedEvent productCreatedEvent){
