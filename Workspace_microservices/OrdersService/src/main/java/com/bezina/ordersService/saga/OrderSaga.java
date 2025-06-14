@@ -14,16 +14,13 @@ import com.bezina.ordersService.core.event.OrderApprovedEvent;
 import com.bezina.ordersService.core.event.OrderCreatedEvent;
 import com.bezina.ordersService.core.event.OrderRejectedEvent;
 import jakarta.annotation.PostConstruct;
-import org.axonframework.commandhandling.CommandCallback;
-import org.axonframework.commandhandling.CommandMessage;
-import org.axonframework.commandhandling.CommandResultMessage;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.config.ProcessingGroup;
-import org.axonframework.messaging.responsetypes.ResponseType;
+import org.axonframework.deadline.DeadlineManager;
+import org.axonframework.deadline.annotation.DeadlineHandler;
 import org.axonframework.messaging.responsetypes.ResponseTypes;
 import org.axonframework.modelling.saga.EndSaga;
 import org.axonframework.modelling.saga.SagaEventHandler;
-import org.axonframework.modelling.saga.SagaLifecycle;
 import org.axonframework.modelling.saga.StartSaga;
 import org.axonframework.queryhandling.QueryGateway;
 import org.axonframework.spring.stereotype.Saga;
@@ -31,7 +28,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.annotation.Nonnull;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -39,11 +37,16 @@ import java.util.concurrent.TimeUnit;
 @ProcessingGroup("OrderSagaProcessor")
 public class OrderSaga {
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderSaga.class);
+    private static final String DEADLINE_METHOD_NAME = "payment-process-deadline";
+    private String scheduleId;
     @Autowired
     private transient CommandGateway commandGateway;
     @Autowired
     private transient QueryGateway queryGateway;
     //bottleneck
+
+    @Autowired
+    private transient DeadlineManager deadlineManager;
 
     public OrderSaga(CommandGateway commandGateway, QueryGateway queryGateway) {
         this.commandGateway = commandGateway;
@@ -110,6 +113,13 @@ public class OrderSaga {
 
         LOGGER.info("Successfully fetched payment for user: "+ userPaymentDetails.getFirstName());
 
+        //for demo 10sec is ok but in real use cases time can be counted in hours or days
+        scheduleId = deadlineManager.schedule(Duration.of(120, ChronoUnit.SECONDS),
+                            DEADLINE_METHOD_NAME,
+                            productReservedEvent);
+        //!!!! for deadline test only!!!!!!!!!!!
+       // if (true) return;
+
         ProcessPaymentCommand processPaymentCommand = new ProcessPaymentCommand.Builder()
                 .orderId(productReservedEvent.getOrderId())
                 .paymentDetails(userPaymentDetails.getPaymentDetails())
@@ -132,6 +142,8 @@ public class OrderSaga {
         }
     }
     private void cancelProductReservation(ProductReservedEvent productReservedEvent, String reason){
+        cancelDeadline(DEADLINE_METHOD_NAME); // if we got here no need for deadline anymore
+
         CancelProductReservationCommand cancelProductReservationCommand = new CancelProductReservationCommand.Builder()
                 .orderId(productReservedEvent.getOrderId())
                 .productId(productReservedEvent.getProductId())
@@ -143,9 +155,19 @@ public class OrderSaga {
     }
     @SagaEventHandler(associationProperty = "orderId")
     public void handle(PaymentProcessedEvent paymentProcessedEvent){
+        //if we got here the deadline make no sense
+        cancelDeadline(DEADLINE_METHOD_NAME);
         //send an ApproveOrderCommand
         ApproveOrderCommand approveOrderCommand = new ApproveOrderCommand(paymentProcessedEvent.getOrderId());
         commandGateway.send(approveOrderCommand);
+    }
+
+    private void cancelDeadline(String deadlineName){
+        if (scheduleId != null){
+            deadlineManager.cancelSchedule(deadlineName, scheduleId);
+            scheduleId = null;
+        }
+          //  deadlineManager.cancelAll(deadlineName);
     }
     @EndSaga
     @SagaEventHandler(associationProperty = "orderId")
@@ -170,6 +192,13 @@ public class OrderSaga {
                 " and the reason "+orderRejectedEvent.getReason() );
         // SagaLifecycle.end();
         //after than this instance of saga could not handle any event anymore
+    }
+
+    @DeadlineHandler(deadlineName = DEADLINE_METHOD_NAME)
+    public void handlePaymentDeadline(ProductReservedEvent productReservedEvent){
+        LOGGER.info("Payment processing deadline took place. Sending a compensating command to cancel the payment ");
+        cancelProductReservation(productReservedEvent, "Payment processing timeout");
+
     }
 
 }

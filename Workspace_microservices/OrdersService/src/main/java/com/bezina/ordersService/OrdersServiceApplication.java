@@ -2,15 +2,18 @@ package com.bezina.ordersService;
 
 import com.bezina.ordersService.command.interceptor.CreateOrderCommandInterceptor;
 import com.bezina.ordersService.core.errorHandling.OrderServiceEventsHandler;
-import com.thoughtworks.xstream.XStream;
 import org.axonframework.commandhandling.CommandBus;
+import org.axonframework.config.Configuration;
+import org.axonframework.config.ConfigurationScopeAwareProvider;
 import org.axonframework.config.EventProcessingConfigurer;
+import org.axonframework.deadline.DeadlineManager;
+import org.axonframework.deadline.SimpleDeadlineManager;
+import org.axonframework.spring.messaging.unitofwork.SpringTransactionManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
 
 @SpringBootApplication
 public class OrdersServiceApplication {
@@ -35,6 +38,13 @@ public class OrdersServiceApplication {
 //				, configuration ->
 //						PropagatingErrorHandler.instance()
 //		);
+	}
+	@Bean
+	public DeadlineManager deadlineManager(Configuration configuration, SpringTransactionManager transactionManager){
+		return new SimpleDeadlineManager.Builder()
+				.scopeAwareProvider(new ConfigurationScopeAwareProvider(configuration))
+				.transactionManager(transactionManager)
+				.build();
 	}
 
 }
