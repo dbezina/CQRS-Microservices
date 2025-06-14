@@ -3,10 +3,12 @@ package com.bezina.core.events;
 import com.bezina.core.commands.ReserveProductCommand;
 
 public class ProductReservedEvent {
-    public final String productId;
-    public final int quantity;
-    public final String orderId;
-    public final String userId;
+    private final String productId;
+    private final int quantity;
+    private final String orderId;
+    private final String userId;
+
+
 
     public String getProductId() {
         return productId;
@@ -32,14 +34,15 @@ public class ProductReservedEvent {
     }
     public ProductReservedEvent(Builder builder) {
         this.productId = builder.productId;
-        this.quantity = builder.quantity;
         this.orderId = builder.orderId;
         this.userId = builder.userId;
+        this.quantity = builder.quantity;
     }
 
     public static class Builder{
         private String productId;
-        private int quantity;
+      //  private int quantity;
+        private Integer quantity;
         private String orderId;
         private String userId;
         public Builder productId(String productId) {

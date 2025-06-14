@@ -1,7 +1,9 @@
 package com.bezina.ProductService.command;
 
 import com.bezina.ProductService.core.events.ProductCreatedEvent;
+import com.bezina.core.commands.CancelProductReservationCommand;
 import com.bezina.core.commands.ReserveProductCommand;
+import com.bezina.core.events.ProductReservationCancelledEvent;
 import com.bezina.core.events.ProductReservedEvent;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
@@ -60,9 +62,24 @@ public class ProductAggregate {
         this.price = productCreatedEvent.getPrice();
         this.quantity = productCreatedEvent.getQuantity();
     }
+    @CommandHandler
+    public void handle(CancelProductReservationCommand cancelProductReservationCommand){
+        ProductReservationCancelledEvent productReservationCancelledEvent = new ProductReservationCancelledEvent.Builder()
+                .orderId(cancelProductReservationCommand.getOrderId())
+                .productId(cancelProductReservationCommand.getProductId())
+                .quantity(cancelProductReservationCommand.getQuantity())
+                .userId(cancelProductReservationCommand.getUserId())
+                .reason(cancelProductReservationCommand.getReason())
+                .build();
+        AggregateLifecycle.apply(productReservationCancelledEvent);
+    }
 
     @EventSourcingHandler
     public void on(ProductReservedEvent productReservedEvent){
         this.quantity -= productReservedEvent.getQuantity();
+    }
+    @EventSourcingHandler
+    public void on(ProductReservationCancelledEvent productReservationCancelledEvent){
+        this.quantity += productReservationCancelledEvent.getQuantity();
     }
 }

@@ -10,6 +10,7 @@
         <module name="core" />
         <module name="DiscoveryServer" />
         <module name="ApiGateway" />
+        <module name="PaymentService" />
         <module name="ordersService" />
         <module name="userService" />
       </profile>
@@ -28,6 +29,7 @@
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="ApiGateway" options="-parameters" />
       <module name="DiscoveryServer" options="-parameters" />
+      <module name="PaymentService" options="-parameters" />
       <module name="ProductService" options="-parameters" />
       <module name="core" options="-parameters" />
       <module name="ordersService" options="-parameters" />

@@ -25,7 +25,7 @@ public class OrdersServiceApplication {
 	}
 	@Autowired
 	public void configure (EventProcessingConfigurer configurer){
-		//to register listener and Invokation ErrorMessage Handler as specific processing group
+		//to register listener and Invocation ErrorMessage Handler as specific processing group
 		configurer.registerListenerInvocationErrorHandler("order-group"
 				, configuration ->
 						new OrderServiceEventsHandler()

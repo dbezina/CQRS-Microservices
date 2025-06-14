@@ -58,6 +58,11 @@
 			<version>4.10.3</version>
 		</dependency>
 		<dependency>
+			<groupId>io.axoniq.console</groupId>
+			<artifactId>console-framework-client-spring-boot-starter</artifactId>
+			<version>1.9.0</version>
+		</dependency>
+		<dependency>
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
 			<scope>runtime</scope>
