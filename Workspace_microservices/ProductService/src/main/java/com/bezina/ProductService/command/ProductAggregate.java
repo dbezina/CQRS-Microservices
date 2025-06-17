@@ -14,24 +14,25 @@ import org.springframework.beans.BeanUtils;
 
 import java.math.BigDecimal;
 
-@Aggregate
+@Aggregate(snapshotTriggerDefinition = "productSnapshotTriggerDefinition")
 public class ProductAggregate {
 
     @AggregateIdentifier
-    private  String productId;
-    private  String title;
-    private  BigDecimal price;
-    private  Integer quantity;
+    private String productId;
+    private String title;
+    private BigDecimal price;
+    private Integer quantity;
 
     public ProductAggregate() {
     }
+
     @CommandHandler
-    public ProductAggregate(CreateProductCommand createProductCommand)  {
+    public ProductAggregate(CreateProductCommand createProductCommand) {
         //validate Create Product Command
-        if ( createProductCommand.getPrice().compareTo(BigDecimal.ZERO)<=0 ){
+        if (createProductCommand.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Price can't be less or equal to zero");
         }
-        if ((createProductCommand.getTitle() == null)||(createProductCommand.getTitle().isBlank())){
+        if ((createProductCommand.getTitle() == null) || (createProductCommand.getTitle().isBlank())) {
             throw new IllegalArgumentException("Title can't be empty");
 
         }
@@ -39,12 +40,13 @@ public class ProductAggregate {
         AggregateLifecycle.apply(productCreatedEvent);
 
     }
+
     @CommandHandler
-    public void handle(ReserveProductCommand reserveProductCommand){
+    public void handle(ReserveProductCommand reserveProductCommand) {
         System.out.println("   @CommandHandler\n" +
                 "    public void handle(ReserveProductCommand reserveProductCommand)");
 
-        if(quantity < reserveProductCommand.getQuantity()){
+        if (quantity < reserveProductCommand.getQuantity()) {
             throw new IllegalArgumentException("Insufficient number of items in stock");
         }
         ProductReservedEvent productReservedEvent = new ProductReservedEvent.Builder()
@@ -55,15 +57,17 @@ public class ProductAggregate {
                 .build();
         AggregateLifecycle.apply(productReservedEvent);
     }
+
     @EventSourcingHandler
-    public void on(ProductCreatedEvent productCreatedEvent){
+    public void on(ProductCreatedEvent productCreatedEvent) {
         this.productId = productCreatedEvent.getProductId();
         this.title = productCreatedEvent.getTitle();
         this.price = productCreatedEvent.getPrice();
         this.quantity = productCreatedEvent.getQuantity();
     }
+
     @CommandHandler
-    public void handle(CancelProductReservationCommand cancelProductReservationCommand){
+    public void handle(CancelProductReservationCommand cancelProductReservationCommand) {
         ProductReservationCancelledEvent productReservationCancelledEvent = new ProductReservationCancelledEvent.Builder()
                 .orderId(cancelProductReservationCommand.getOrderId())
                 .productId(cancelProductReservationCommand.getProductId())
@@ -75,11 +79,12 @@ public class ProductAggregate {
     }
 
     @EventSourcingHandler
-    public void on(ProductReservedEvent productReservedEvent){
+    public void on(ProductReservedEvent productReservedEvent) {
         this.quantity -= productReservedEvent.getQuantity();
     }
+
     @EventSourcingHandler
-    public void on(ProductReservationCancelledEvent productReservationCancelledEvent){
+    public void on(ProductReservationCancelledEvent productReservationCancelledEvent) {
         this.quantity += productReservationCancelledEvent.getQuantity();
     }
 }
