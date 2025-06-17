@@ -65,7 +65,7 @@ public class OrderAggregate {
 
     @CommandHandler
     public void handle(RejectOrderCommand rejectOrderCommand){
-        //Create and publish RejectOrderEvent
+        System.out.println("Create and publish RejectOrderEvent");
         OrderRejectedEvent orderRejectedEvent = new OrderRejectedEvent(rejectOrderCommand.getOrderId(),rejectOrderCommand.getReason());
         AggregateLifecycle.apply(orderRejectedEvent);
     }
