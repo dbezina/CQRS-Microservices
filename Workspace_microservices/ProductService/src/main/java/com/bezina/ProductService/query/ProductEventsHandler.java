@@ -7,6 +7,7 @@ import com.bezina.core.events.ProductReservationCancelledEvent;
 import com.bezina.core.events.ProductReservedEvent;
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
+import org.axonframework.eventhandling.ResetHandler;
 import org.axonframework.messaging.interceptors.ExceptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,5 +74,11 @@ public class ProductEventsHandler {
         LOGGER.info("ProductReservationCancelledEvent is called for productId: "+ product.getProductId()+
                 " and orederId "+ productReservationCancelledEvent.getOrderId() +
                 " with quantity "+ productReservationCancelledEvent.getQuantity());
+    }
+
+    @ResetHandler
+    public void reset(){
+        productRepo.deleteAll();
+        //also delete from product_lookup
     }
 }

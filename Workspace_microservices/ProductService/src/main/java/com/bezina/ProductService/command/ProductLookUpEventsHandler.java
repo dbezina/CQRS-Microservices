@@ -5,6 +5,7 @@ import com.bezina.ProductService.core.data.ProductLookUpRepository;
 import com.bezina.ProductService.core.events.ProductCreatedEvent;
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
+import org.axonframework.eventhandling.ResetHandler;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -22,6 +23,10 @@ public class ProductLookUpEventsHandler {
                 event.getProductId(),event.getTitle()
         );
         productLookUpRepo.save(productLookUpEntity);
-
+    }
+    @ResetHandler
+    public void reset(){
+        productLookUpRepo.deleteAll();
+        //also delete from product
     }
 }
